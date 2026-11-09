@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hand-Me-Down Bot</title>
+<meta name="description" content="Forward your giveaway post to the Hand-Me-Down Bot and it lands on your neighborhood's board in under a minute.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧺</text></svg>">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700,800&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EEF3EC;
+    --surface: #FFFFFF;
+    --ink: #1F2A44;
+    --ink-soft: #4A5570;
+    --kraft: #E7CFA0;
+    --kraft-edge: #C9AD78;
+    --marigold: #F2B632;
+    --leaf: #2E7D5B;
+    --line: #B9C4B5;
+    --bubble-in: #FFFFFF;
+    --bubble-out: #D9F5C9;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141B2B;
+      --surface: #1D2538;
+      --ink: #EEF1F7;
+      --ink-soft: #AEB6C9;
+      --kraft: #CDB282;
+      --kraft-edge: #A88E5E;
+      --marigold: #F2B632;
+      --leaf: #6CCB9C;
+      --line: #3A4560;
+      --bubble-in: #26304A;
+      --bubble-out: #2D4A3A;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 18px/1.6 "Satoshi", system-ui, sans-serif;
+  }
+  a { color: var(--leaf); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 3px solid var(--marigold);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  h1, h2, h3 {
+    font-family: "Cabinet Grotesk", system-ui, sans-serif;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  /* Header */
+  header { padding: 24px 0; }
+  header .wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .brand { font-family: "Cabinet Grotesk", sans-serif; font-weight: 700; font-size: 20px; text-decoration: none; color: var(--ink); }
+  header nav a { color: var(--ink-soft); text-decoration: none; margin-left: 20px; font-size: 16px; }
+  header nav a:hover { color: var(--ink); }
+
+  /* Hero */
+  .hero { padding: 32px 0 64px; }
+  .hero .wrap { display: grid; grid-template-columns: 1.2fr 1fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: clamp(40px, 4.8vw, 62px); font-weight: 800; }
+  .hero p { font-size: 20px; color: var(--ink-soft); max-width: 30em; margin: 24px 0 32px; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn {
+    display: inline-block;
+    padding: 14px 22px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 17px;
+    text-decoration: none;
+  }
+  .btn-main { background: var(--leaf); color: var(--surface); }
+  .btn-main:hover { filter: brightness(1.08); }
+  .btn-quiet { color: var(--ink); border: 2px solid var(--line); }
+  .btn-quiet:hover { border-color: var(--ink-soft); }
+
+  /* Laundry line of hang tags */
+  .line-art { position: relative; height: 300px; }
+  .line-art svg.string { position: absolute; inset: 0; width: 100%; height: 120px; }
+  .tag {
+    position: absolute;
+    width: 30%;
+    padding: 46px 16px 20px;
+    background: var(--kraft);
+    color: #2B2418;
+    clip-path: polygon(22% 0, 78% 0, 100% 14%, 100% 100%, 0 100%, 0 14%);
+    transform-origin: 50% 0;
+    filter: drop-shadow(0 2px 0 var(--kraft-edge));
+  }
+  .tag::before {
+    content: "";
+    position: absolute;
+    top: 16px; left: 50%;
+    width: 14px; height: 14px;
+    margin-left: -7px;
+    border-radius: 50%;
+    background: var(--bg);
+    box-shadow: inset 0 0 0 2px var(--kraft-edge);
+  }
+  .tag .free {
+    display: inline-block;
+    background: var(--marigold);
+    color: #2B2418;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .tag h3 { font-size: 22px; font-weight: 700; color: #2B2418; }
+  .tag p { margin: 6px 0 0; font-size: 14px; line-height: 1.35; color: #5A4C33; }
+  .tag.t1 { left: 1%; top: 58px; transform: rotate(-4deg); }
+  .tag.t2 { left: 35%; top: 78px; transform: rotate(3deg); }
+  .tag.t3 { left: 69%; top: 60px; transform: rotate(-2deg); }
+  .tag.t2 .free { background: var(--surface); }
+  .tag.claimed h3, .tag.claimed p { text-decoration: line-through; opacity: 0.6; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .tag { animation: sway 2.4s ease-out 1; }
+    .tag.t2 { animation-delay: 0.15s; }
+    .tag.t3 { animation-delay: 0.3s; }
+  }
+  @keyframes sway {
+    0% { rotate: 0deg; translate: 0 -24px; opacity: 0; }
+    30% { rotate: 6deg; translate: 0 0; opacity: 1; }
+    55% { rotate: -4deg; }
+    75% { rotate: 2deg; }
+    100% { rotate: 0deg; }
+  }
+
+  /* Sections */
+  section { padding: 72px 0; }
+  .section-head { max-width: 36em; margin-bottom: 40px; }
+  .section-head h2 { font-size: clamp(34px, 4.5vw, 52px); font-weight: 800; }
+  .section-head p { color: var(--ink-soft); margin: 16px 0 0; }
+
+  /* How it works */
+  .how { background: var(--surface); }
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; counter-reset: step; }
+  .steps li { counter-increment: step; }
+  .steps li::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--marigold);
+    color: #2B2418;
+    font: 800 20px "Cabinet Grotesk", sans-serif;
+    margin-bottom: 16px;
+  }
+  .steps h3 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .steps p { margin: 0 0 16px; color: var(--ink-soft); }
+  .chat { display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.4; }
+  .bubble { max-width: 92%; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); }
+  .bubble.in { background: var(--bubble-in); align-self: flex-start; border-top-left-radius: 4px; }
+  .bubble.out { background: var(--bubble-out); align-self: flex-end; border-top-right-radius: 4px; }
+  .bubble small { display: block; color: var(--ink-soft); font-size: 12px; margin-bottom: 2px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chips span { border: 1px solid var(--leaf); color: var(--leaf); border-radius: 999px; padding: 2px 10px; font-size: 13px; font-weight: 700; }
+
+  /* Admins and privacy */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+  .two-col h2 { font-size: clamp(30px, 3.6vw, 42px); font-weight: 800; margin-bottom: 16px; }
+  .two-col p { color: var(--ink-soft); margin: 0 0 16px; }
+  .two-col ul { margin: 0; padding-left: 20px; }
+  .two-col li { margin-bottom: 10px; }
+
+  /* FAQ */
+  .faq { max-width: 760px; }
+  details { border-top: 2px solid var(--line); padding: 18px 0; }
+  details:last-child { border-bottom: 2px solid var(--line); }
+  summary { cursor: pointer; font-weight: 700; font-size: 19px; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-size: 24px; line-height: 1; color: var(--leaf); }
+  details[open] summary::after { content: "–"; }
+  details p { color: var(--ink-soft); margin: 12px 0 0; max-width: 40em; }
+
+  /* Closing */
+  .closing { text-align: center; padding: 88px 0; }
+  .closing h2 { font-size: clamp(36px, 5vw, 60px); font-weight: 800; margin-bottom: 24px; }
+  footer { padding: 32px 0 48px; color: var(--ink-soft); font-size: 15px; border-top: 2px solid var(--line); }
+
+  @media (max-width: 860px) {
+    .hero .wrap, .two-col { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr; }
+    .line-art { height: 290px; max-width: 540px; }
+    header nav { display: none; }
+  }
+  @media (max-width: 480px) {
+    .line-art { height: 240px; }
+    .tag { padding: 38px 10px 14px; }
+    .tag h3 { font-size: 16px; }
+    .tag p { font-size: 12px; }
+    .tag .free { font-size: 11px; padding: 1px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="#">Hand-Me-Down Bot</a>
+    <nav aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#admins">For admins</a>
+      <a href="#faq">Questions</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div>
+        <h1 id="hero-title">All the <span style="white-space: nowrap">hand-me-downs</span> from your group chat, in one place.</h1>
+        <p>Forward your giveaway post from your neighborhood WhatsApp group to the Hand-Me-Down Bot. It lands on your neighborhood's board in under a minute, sorted by size and category.</p>
+        <div class="cta-row">
+          <!-- Replace the number and code with your bot's number and your neighborhood's join code -->
+          <a class="btn btn-main" href="https://wa.me/15550000000?text=join%20noevalley">Message the bot on WhatsApp</a>
+          <a class="btn btn-quiet" href="#how">See how it works</a>
+        </div>
+      </div>
+
+      <div class="line-art" aria-hidden="true">
+        <svg class="string" viewBox="0 0 500 120" preserveAspectRatio="none">
+          <path d="M0 30 Q250 92 500 30" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-width="2"/>
+        </svg>
+        <div class="tag t1">
+          <span class="free">Free</span>
+          <h3>2T pajamas</h3>
+          <p>3 pairs, porch pickup in Noe Valley</p>
+        </div>
+        <div class="tag t2 claimed">
+          <span class="free">Claimed</span>
+          <h3>Wooden blocks</h3>
+          <p>Full set, Glen Park</p>
+        </div>
+        <div class="tag t3">
+          <span class="free">Free</span>
+          <h3>Rain boots</h3>
+          <p>Toddler size 7, Bernal Heights</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="how-title">Keep posting in your group. The bot does the sorting.</h2>
+        <p>Nothing changes about how your group works. One extra forward puts your item where neighbors can actually find it.</p>
+      </div>
+      <ol class="steps">
+        <li>
+          <h3>Post in your group</h3>
+          <p>Share your giveaway the way you always do, with a photo.</p>
+          <div class="chat" aria-label="Example group post">
+            <div class="bubble in"><small>Ana, Noe Valley Parents</small>Giving away 2T pajamas, 3 pairs. Porch pickup!</div>
+          </div>
+        </li>
+        <li>
+          <h3>Forward it to the bot</h3>
+          <p>Long-press your post, tap Forward, and pick Hand-Me-Down Bot.</p>
+          <div class="chat" aria-label="Example bot reply">
+            <div class="bubble out"><small>Forwarded</small>Giving away 2T pajamas, 3 pairs. Porch pickup!</div>
+            <div class="bubble in"><small>Hand-Me-Down Bot</small>Listed: 2T pajamas, 3 pairs, Clothing, Noe Valley.
+              <div class="chips"><span>Edit</span><span>Remove</span></div>
+            </div>
+          </div>
+        </li>
+        <li>
+          <h3>Tap when it's gone</h3>
+          <p>When someone picks it up, tell the bot and it comes off the board.</p>
+          <div class="chat" aria-label="Example of marking an item gone">
+            <div class="bubble out">The pajamas are gone</div>
+            <div class="bubble in"><small>Hand-Me-Down Bot</small>Got it. Your 2T pajamas are off the board.</div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="admins" aria-label="For group admins and privacy">
+    <div class="wrap two-col">
+      <div>
+        <h2>For group admins</h2>
+        <p>The bot never joins your WhatsApp group and never reads it. Members choose what to send.</p>
+        <ul>
+          <li>Share the bot's number in your group description so members know where to forward.</li>
+          <li>Nothing about your group changes: no bot to add, no settings to switch.</li>
+        </ul>
+        <p>Coming later: weekly summaries to share with the group and an admin page for managing listings.</p>
+      </div>
+      <div>
+        <h2>Your number stays off the board</h2>
+        <p>The board shows your WhatsApp name, your neighborhood, and when you listed an item. It never shows your phone number.</p>
+        <p>To create listings, the messages and photos you send to the bot are processed by Meta, which runs WhatsApp, and by an AI service. The person running this board can also see them. We don't sell your information or use it for anything else.</p>
+        <p>This is an early prototype, so features and safeguards are still being built. Don't send anything you wouldn't want a neighbor to see.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" aria-labelledby="faq-title">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 id="faq-title">Questions</h2>
+      </div>
+      <div class="faq">
+        <details>
+          <summary>Does it cost anything?</summary>
+          <p>No. The board is free for neighbors, and it's only for items given away for free.</p>
+        </details>
+        <details>
+          <summary>Do I need to download an app?</summary>
+          <p>No. Everything happens in WhatsApp. The board opens in your browser from a sign-in link the bot sends you.</p>
+        </details>
+        <details>
+          <summary>How do I see the board?</summary>
+          <p>Open the board link your group shares, or ask the bot for it.</p>
+        </details>
+        <details>
+          <summary>What if I forget to mark something as gone?</summary>
+          <p>Tell the bot whenever you remember. Automatic reminders for older listings are on the way.</p>
+        </details>
+        <details>
+          <summary>Who can see what I send?</summary>
+          <p>Your messages and photos pass through Meta and an AI service to create listings, and the person running the board can see them. The board itself never shows your phone number.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing" aria-labelledby="closing-title">
+    <div class="wrap">
+      <h2 id="closing-title">Got something your kids outgrew?</h2>
+      <a class="btn btn-main" href="https://wa.me/15550000000?text=join%20noevalley">Message the bot on WhatsApp</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">Made by neighbors, for neighbors. An early prototype built at the Lovable hackathon.</div>
+</footer>
+
+</body>
+</html>
